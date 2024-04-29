@@ -3,7 +3,7 @@ import json
 import pytest
 from unittest.mock import MagicMock
 from FactScoreLite.atomic_facts import AtomicFactGenerator
-from FactScoreLite import configs
+from FactScoreLite import FactScoreConfig
 
 
 @pytest.fixture
@@ -38,7 +38,7 @@ def test_load_demons(generator):
     with patch("builtins.open", mock_open(read_data=mock_json_str)):
         # Also mock configs.demons_path to avoid dependency on external config files
         with patch.object(
-            configs, "atomic_facts_demons_path", "fake/path/to/atomic_facts_demons.json"
+            FactScoreConfig, "atomic_facts_demons_path", "fake/path/to/atomic_facts_demons.json"
         ):
             demons = generator.load_demons()
             # Assert that the returned data matches your mock data

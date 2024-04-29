@@ -10,7 +10,7 @@ class FactScorer:
     def __init__(self, config: FactScoreConfig = FactScoreConfig()):
         self.config = config
         self.atomic_fact_generator = AtomicFactGenerator(config)
-        self.fact_scorer = FactVerifier(config)
+        self.fact_verifier = FactVerifier(config)
         self.facts_handler = StateHandler(config.facts_db_path)
         self.decisions_handler = StateHandler(config.decisions_db_path)
         self.gamma = config.gamma
@@ -95,7 +95,6 @@ class FactScorer:
         """
 
         print("Generating decisions...")
-
         decisions = self.decisions_handler.load()
         scores = []
         init_scores = []
@@ -119,7 +118,7 @@ class FactScorer:
         ):
             generation, facts = entry["generation"], entry["facts"]
 
-            decision = self.fact_scorer.verify_facts(facts, knowledge_source)
+            decision = self.fact_verifier.verify_facts(facts, knowledge_source)
             score, init_score = self.calculate_score(decision)
 
             init_scores.append(init_score)

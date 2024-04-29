@@ -7,7 +7,7 @@ import random
 
 class FactVerifier:
     def __init__(self, config: FactScoreConfig = FactScoreConfig()):
-        self.fact_scorer_demons_path = config.fact_scorer_demons_path
+        self.fact_verification_demons_path = config.fact_verification_demons_path
         # Examples (demonstrations) that is used in prompt generation
         self.demons = self.load_demons()
         # To interact with OpenAI APIs
@@ -21,7 +21,7 @@ class FactVerifier:
         Returns:
             list: A list of examples (demonstrations).
         """
-        with open(self.fact_scorer_demons_path, "r") as file:
+        with open(self.fact_verification_demons_path, "r") as file:
             demons = json.load(file)
 
         return demons
@@ -60,7 +60,6 @@ class FactVerifier:
         Returns:
             list: A list of dictionaries containing the atomic fact and its verification result.
         """
-
         decisions = []
 
         for atom in facts:

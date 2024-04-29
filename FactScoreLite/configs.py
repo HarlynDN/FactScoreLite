@@ -9,7 +9,7 @@ class FactScoreConfig:
     # Path to the data file within the package
     atomic_facts_demons_path: str = data_path / "atomic_facts_demons.json"
 
-    fact_scorer_demons_path: str = data_path / "fact_scorer_demons.json"
+    fact_verification_demons_path: str = data_path / "fact_verification_demons.json"
 
     # OpenAI API
     max_tokens: int = 1024

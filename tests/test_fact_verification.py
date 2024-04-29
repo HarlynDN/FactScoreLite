@@ -2,17 +2,17 @@ import pytest
 from unittest.mock import mock_open, patch
 from FactScoreLite.fact_verification import FactVerifier
 import json
-from FactScoreLite import configs
+from FactScoreLite import FactScoreConfig
 
 
 @pytest.fixture
 def mock_openai_agent():
-    with patch("FactScoreLite.fact_scorer.OpenAIAgent") as mock:
+    with patch("FactScoreLite.fact_verification.OpenAIAgent") as mock:
         yield mock()
 
 
 @pytest.fixture
-def fact_scorer(mock_openai_agent):
+def fact_verifier(mock_openai_agent):
     return FactVerifier()
 
 
@@ -23,15 +23,15 @@ def fact_scorer(mock_openai_agent):
         ([" Fact 2 "], "Fact 2 True or False?\nOutput:\n"),
     ],
 )
-def test_get_score_prompt_format(
-    fact_scorer,
+def test_verify_facts_prompt_format(
+    fact_verifier,
     mock_openai_agent,
     facts,
     expected_prompt_end,
     knowledge_source="Test context.",
 ):
     mock_openai_agent.generate.return_value = "True"
-    fact_scorer.get_score(facts, knowledge_source)
+    fact_verifier.verify_facts(facts, knowledge_source)
     mock_openai_agent.generate.assert_called_once()
     args, kwargs = mock_openai_agent.generate.call_args
     assert args[0].endswith(
@@ -39,9 +39,9 @@ def test_get_score_prompt_format(
     ), "The prompt should be correctly formatted and end with the expected text."
 
 
-def test_get_score_empty_input(fact_scorer):
+def test_verify_facts_empty_input(fact_verifier):
     assert (
-        fact_scorer.get_score([], "Some knowledge") == []
+        fact_verifier.verify_facts([], "Some knowledge") == []
     ), "Should return an empty list for empty facts input."
 
 
@@ -55,29 +55,29 @@ def test_get_score_empty_input(fact_scorer):
         ("Not available", False),
     ],
 )
-def test_get_score_response_interpretation(
-    fact_scorer, mock_openai_agent, response, expected
+def test_verify_facts_response_interpretation(
+    fact_verifier, mock_openai_agent, response, expected
 ):
     mock_openai_agent.generate.return_value = response
-    result = fact_scorer.get_score(["Fact 1"], "Knowledge source")
+    result = fact_verifier.verify_facts(["Fact 1"], "Knowledge source")
     assert result == [
         {"fact": "Fact 1", "is_supported": expected, "output": response}
     ], f"Expected decision to be {expected} for response '{response}'."
 
 
-def test_error_handling_when_openai_agent_fails(fact_scorer, mock_openai_agent):
+def test_error_handling_when_openai_agent_fails(fact_verifier, mock_openai_agent):
     mock_openai_agent.generate.side_effect = Exception("Network error")
     with pytest.raises(Exception):
-        fact_scorer.get_score(["Fact 1"], "Knowledge source")
+        fact_verifier.verify_facts(["Fact 1"], "Knowledge source")
 
 
-def test_complex_knowledge_source_and_atomic_facts(fact_scorer, mock_openai_agent):
+def test_complex_knowledge_source_and_atomic_facts(fact_verifier, mock_openai_agent):
     facts = ["A very complex fact that needs to be evaluated"]
     knowledge_source = (
         "A very long and complex knowledge source containing much information."
     )
     mock_openai_agent.generate.return_value = "True"
-    result = fact_scorer.get_score(facts, knowledge_source)
+    result = fact_verifier.verify_facts(facts, knowledge_source)
     assert isinstance(
         result, list
     ), "Expected a list to be returned for complex inputs."
@@ -102,25 +102,25 @@ mock_demons_data = [
 
 
 # Test for the load_demons method
-def test_load_demons(fact_scorer):
+def test_load_demons(fact_verifier):
     # Convert your sample data to a JSON string for mocking
     mock_json_str = json.dumps(mock_demons_data)
     # Use patch to mock open function within the context of your test
     with patch("builtins.open", mock_open(read_data=mock_json_str)):
-        # Also mock configs.demons_path to avoid dependency on external config files
+        # Also mock FactScoreConfig.demons_path to avoid dependency on external config files
         with patch.object(
-            configs, "atomic_facts_demons_path", "fake/path/to/fact_scorer_demons.json"
+            FactScoreConfig, "atomic_facts_demons_path", "fake/path/to/fact_scorer_demons.json"
         ):
-            demons = fact_scorer.load_demons()
+            demons = fact_verifier.load_demons()
             # Assert that the returned data matches your mock data
             assert (
                 demons == mock_demons_data
             ), "The method should load and return the demons correctly."
 
 
-def test_get_instructions_true_false_demons(fact_scorer):
+def test_get_instructions_true_false_demons(fact_verifier):
     # Test case for a single demon in self.demons
-    fact_scorer.demons = mock_demons_data
+    fact_verifier.demons = mock_demons_data
     expected_instructions = (
         "Instruction:\nOnly consider the statement true if it can be directly verified by the information in the context. If the information in the statement cannot be found in the context or differs from it, label it as false.\n\n"
         "Context:\nknw 1\n"
@@ -130,4 +130,4 @@ def test_get_instructions_true_false_demons(fact_scorer):
         "Statement:\nfact 2 True or False?\n"
         "Output:\nFalse\n\n"
     )
-    assert fact_scorer.get_instructions() == expected_instructions
+    assert fact_verifier.get_instructions() == expected_instructions

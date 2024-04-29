@@ -1,43 +1,43 @@
 import pytest
 from unittest.mock import patch
-from FactScoreLite import FactScorer
+from FactScoreLite import FactScorer, FactScoreConfig
 
 
 @pytest.fixture
 def mock_atomic_fact_generator():
-    with patch("FactScoreLite.factscore.AtomicFactGenerator") as mock:
+    with patch("FactScoreLite.factscorer.AtomicFactGenerator") as mock:
         yield mock()
 
 
 @pytest.fixture
-def mock_fact_scorer():
-    with patch("FactScoreLite.factscore.FactScorer") as mock:
+def mock_fact_verifier():
+    with patch("FactScoreLite.factscorer.FactVerifier") as mock:
         yield mock()
 
 
 @pytest.fixture
 def mock_state_handler():
-    with patch("FactScoreLite.factscore.StateHandler") as mock:
+    with patch("FactScoreLite.factscorer.StateHandler") as mock:
         yield mock()
 
 
 @pytest.fixture
-def fact_score(mock_atomic_fact_generator, mock_fact_scorer, mock_state_handler):
+def fact_score(mock_atomic_fact_generator, mock_fact_verifier, mock_state_handler):
     # This setup uses the default gamma value
     return FactScorer()
 
 
 # Test 1: Initialization Tests
 def test_initialization_with_default_gamma(
-    mock_atomic_fact_generator, mock_fact_scorer
+    mock_atomic_fact_generator, mock_fact_verifier
 ):
     fs = FactScorer()
     assert fs.gamma == 10
 
 
-def test_initialization_with_custom_gamma(mock_atomic_fact_generator, mock_fact_scorer):
+def test_initialization_with_custom_gamma(mock_atomic_fact_generator, mock_fact_verifier):
     custom_gamma = 5
-    fs = FactScorer(gamma=custom_gamma)
+    fs = FactScorer(FactScoreConfig(gamma=custom_gamma))
     assert fs.gamma == custom_gamma
 
 
@@ -55,13 +55,13 @@ def test_get_facts_non_empty_input(fact_score, mock_state_handler):
 
 # Test 3: Fact Scoring
 def test_get_decisions_with_valid_input(
-    fact_score, mock_fact_scorer, mock_state_handler
+    fact_score, mock_fact_verifier, mock_state_handler
 ):
     mock_state_handler.load.return_value = []
     generation_facts_pairs = [{"generation": "gen1", "facts": ["fact1", "fact2"]}]
     knowledge_sources = ["source1"]
-    # Mock the FactScorer's get_score method
-    mock_fact_scorer.get_score.return_value = [
+    # Mock the FactScorer's verify_facts method
+    mock_fact_verifier.verify_facts.return_value = [
         {"is_supported": True},
         {"is_supported": False},
     ]
@@ -81,7 +81,7 @@ def test_get_factscore_mismatched_lengths(fact_score):
 
 
 def test_get_factscore_from_saved_states(
-    fact_score, mock_state_handler, mock_atomic_fact_generator, mock_fact_scorer
+    fact_score, mock_state_handler, mock_atomic_fact_generator, mock_fact_verifier
 ):
     mock_state_handler.load.side_effect = [
         [{"generation": "gen1", "facts": ["fact1", "fact2"]}],
@@ -95,7 +95,7 @@ def test_get_factscore_from_saved_states(
     generations = ["generation1", "generation2"]
     knowledge_sources = ["source1", "source2"]
     mock_atomic_fact_generator.run.return_value = [("gen", ["fact1", "fact2"])]
-    mock_fact_scorer.get_score.return_value = [
+    mock_fact_verifier.verify_facts.return_value = [
         {"is_supported": True},
         {"is_supported": False},
     ]
