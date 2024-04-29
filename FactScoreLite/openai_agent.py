@@ -5,7 +5,7 @@ from openai import (
 import time
 import logging
 import random
-from . import configs
+from .configs import FactScoreConfig
 
 
 # define a retry decorator
@@ -62,11 +62,11 @@ def retry_with_exponential_backoff(
 
 class OpenAIAgent:
 
-    def __init__(self):
+    def __init__(self, config: FactScoreConfig = FactScoreConfig()):
         self.client = OpenAI()
-        self.max_tokens = configs.max_tokens
-        self.temp = configs.temp
-        self.model_name = configs.model_name
+        self.max_tokens = config.max_tokens
+        self.temp = config.temp
+        self.model_name = config.model_name
 
     @retry_with_exponential_backoff
     def generate(self, prompt):

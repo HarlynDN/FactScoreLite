@@ -51,25 +51,26 @@ class AtomicFactGenerator:
     def run(self, text: str) -> list:
 ```
 
-2. FactScorer: scoring facts of a text based on a knowledge source.
+2. FactVerifier: verifying facts of a text based on a knowledge source.
 
 ```python
-# fact_scorer.py
+# fact_verification.py
 
-class FactScorer:
-    def get_score(self, facts: list, knowledge_source: str) -> list
+class FactVerifier:
+    def verify_facts(self, facts: list, knowledge_source: str) -> list
 ```
 
-3. FactScore:
+3. FactScorer: the high-level class that combines the two previous components and provides the following functionalities:
 
 - Generating the facts for a text.
-- Scoring the facts based on a knowledge source.
+- Verifying the facts based on a knowledge source.
+- Calculating the FactScore for the text.
 - Dumping the results and GPT outputs to a local json file.
 
 ```python
-# factscore.py
+# factscorer.py
 
-class FactScore:
+class FactScorer:
     def get_factscore(
         self,
         generations: list,
@@ -79,17 +80,18 @@ class FactScore:
 
 ## Usage
 
-### Extract, score, dump
+### Extract, verify, dump
 
-To extract facts of a text and score them based on the input knowledge source and dump the results:
+To extract facts of a text and verify them based on the input knowledge source and dump the results:
 
 ```python
-from FactScoreLite import FactScore
+from FactScoreLite import FactScorer
+fact_scorer = FactScorer()
 
 # generations = a list of texts you want to calculate FactScore for
 # knowledge_sources = a list of texts that the generations were created from
 
-scores, init_scores = FactScore.get_factscore(generations, knowledge_sources)
+scores, init_scores = fact_scorer.get_factscore(generations, knowledge_sources)
 ```
 
 ### Extract
@@ -99,36 +101,53 @@ To only extract the facts from a text (without scoring/dumping):
 ```python
 from FactScoreLite import AtomicFactGenerator
 
-facts = AtomicFactGenerator.run(text)
+facts = AtomicFactGenerator().run(text)
 ```
 
-### Score
+### Verify
 
-To only score the facts of a generation according to a knowledge source (wihtout dumping):
+To only verify the facts of a generation according to a knowledge source (wihtout dumping):
 
 ```python
-from FactScoreLite import FactScorer
+from FactScoreLite import FactVerifier
 
-scores = FactScorer.get_scores(facts, knowledge_sources)
+decisions = FactVerifier().verify_facts(facts, knowledge_sources)
 ```
 
-## Fact Extraction Prompt Engineering
+## Customization
+You can pass a customized `FactScoreConfig` object to the `FactScorer` class: 
+
+```python
+from FactScoreLite import FactScoreConfig, FactScorer
+
+config = FactScoreConfig(
+    model_name="gpt-3.5-turbo",
+    temperature=1,
+)
+fact_scorer = FactScorer(config=config)
+```
+
+
+### Fact Extraction Prompt Engineering
 
 To instruct GPT on how to break each sentence into facts, we have included [examples](FactScoreLite/data/atomic_facts_demons.json) (demonstrations, i.e., demons) that is contained in the prompt. These demons are currently for the vehicle domain. However, you might want to create your own domain specific demons. To do this, you can use GPT to create demons based on your requirements. We prompted GPT with [instructions](FactScoreLite/data/demons_generation_prompt.txt) on how to generate the demons required for the vehicle domain. However, you can alter it based on your needs.
 
 Once you have your own demons.json file, you can include it in the program by setting the correct config:
 
 ```python
-import FactScoreLite
+from FactScoreLite import FactScoreConfig, FactScorer
 
-FactScoreLite.configs.atomic_facts_demons_path = "/path/to/your/json/file"
+config = FactScoreConfig(
+    atomic_facts_demons_path="/path/to/your/json/file",
+)
+fact_scorer = FactScorer(config=config)
 
 # rest of your code
 ```
 
-### Facts Extraction Prompt
-
-The prompt used for extracting facts from a sentence:
+#### Facts Extraction Prompt
+<details>
+<summary>The prompt used for extracting facts from a sentence:</summary>
 
 ```
 # atomic_facts.py
@@ -152,6 +171,7 @@ Sentence:
 target_sentence
 Independent Facts:
 ```
+</details>
 
 ### Facts Scoring Prompt Engineering
 
@@ -160,16 +180,19 @@ We also use [example demonstrations](/FactScoreLite/data/fact_scorer_demons.json
 You can also set your own domain-specific examples for the run by running the following:
 
 ```python
-import FactScoreLite
+from FactScoreLite import FactScoreConfig, FactScorer
 
-FactScoreLite.configs.fact_scorer_demons_path = "/path/to/your/json/file"
+config = FactScoreConfig(
+    fact_scorer_demons_path="/path/to/your/json/file",
+)
+fact_scorer = FactScorer(config=config)
 
 # rest of your code
 ```
 
-### Fact Scoring Prompt
-
-The following prompt template is used to instruct GPT for scoring facts:
+#### Fact Scoring Prompt
+<details>
+<summary>The following prompt template is used to instruct GPT for scoring facts:</summary>
 
 ```
 # fact_scorer.py
@@ -198,6 +221,8 @@ target_fact True or False?
 Output:
 
 ```
+</details>
+
 
 ## Running the Tests
 

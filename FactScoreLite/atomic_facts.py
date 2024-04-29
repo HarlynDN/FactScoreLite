@@ -2,16 +2,17 @@ import re
 import numpy as np
 from nltk.tokenize import sent_tokenize
 from .openai_agent import OpenAIAgent
-from . import configs
+from .configs import FactScoreConfig
 import json
 
 
 class AtomicFactGenerator:
-    def __init__(self):
+    def __init__(self, config: FactScoreConfig = FactScoreConfig()):
+        self.atomic_facts_demons_path = config.atomic_facts_demons_path
         # Examples (demonstrations) that is used in prompt generation
         self.demons = self.load_demons()
         # To interact with OpenAI APIs
-        self.openai_agent = OpenAIAgent()
+        self.openai_agent = OpenAIAgent(config)
 
     def run(self, text: str) -> list:
         """
@@ -45,7 +46,7 @@ class AtomicFactGenerator:
         Returns:
             list: A list of examples (demonstrations).
         """
-        with open(configs.atomic_facts_demons_path, "r") as file:
+        with open(self.atomic_facts_demons_path, "r") as file:
             demons = json.load(file)
 
         return demons

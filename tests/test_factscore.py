@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch
-from FactScoreLite import FactScore
+from FactScoreLite import FactScorer
 
 
 @pytest.fixture
@@ -24,20 +24,20 @@ def mock_state_handler():
 @pytest.fixture
 def fact_score(mock_atomic_fact_generator, mock_fact_scorer, mock_state_handler):
     # This setup uses the default gamma value
-    return FactScore()
+    return FactScorer()
 
 
 # Test 1: Initialization Tests
 def test_initialization_with_default_gamma(
     mock_atomic_fact_generator, mock_fact_scorer
 ):
-    fs = FactScore()
+    fs = FactScorer()
     assert fs.gamma == 10
 
 
 def test_initialization_with_custom_gamma(mock_atomic_fact_generator, mock_fact_scorer):
     custom_gamma = 5
-    fs = FactScore(gamma=custom_gamma)
+    fs = FactScorer(gamma=custom_gamma)
     assert fs.gamma == custom_gamma
 
 

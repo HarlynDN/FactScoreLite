@@ -1,18 +1,19 @@
 import numpy as np
-from . import FactScorer, AtomicFactGenerator
+from . import FactVerifier, AtomicFactGenerator
 from .state_handler import StateHandler
-from . import configs
+from .configs import FactScoreConfig
 from tqdm import tqdm
 
 
-class FactScore:
+class FactScorer:
 
-    def __init__(self, gamma: int = 10):
-        self.atomic_fact_generator = AtomicFactGenerator()
-        self.fact_scorer = FactScorer()
-        self.facts_handler = StateHandler(configs.facts_db_path)
-        self.decisions_handler = StateHandler(configs.decisions_db_path)
-        self.gamma = gamma
+    def __init__(self, config: FactScoreConfig = FactScoreConfig()):
+        self.config = config
+        self.atomic_fact_generator = AtomicFactGenerator(config)
+        self.fact_scorer = FactVerifier(config)
+        self.facts_handler = StateHandler(config.facts_db_path)
+        self.decisions_handler = StateHandler(config.decisions_db_path)
+        self.gamma = config.gamma
 
     def get_facts(self, generations: list) -> list:
         """
@@ -118,7 +119,7 @@ class FactScore:
         ):
             generation, facts = entry["generation"], entry["facts"]
 
-            decision = self.fact_scorer.get_score(facts, knowledge_source)
+            decision = self.fact_scorer.verify_facts(facts, knowledge_source)
             score, init_score = self.calculate_score(decision)
 
             init_scores.append(init_score)

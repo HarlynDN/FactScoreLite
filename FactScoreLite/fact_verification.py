@@ -1,16 +1,17 @@
 import string
 from .openai_agent import OpenAIAgent
-from . import configs
+from .configs import FactScoreConfig
 import json
 import random
 
 
-class FactScorer:
-    def __init__(self):
+class FactVerifier:
+    def __init__(self, config: FactScoreConfig = FactScoreConfig()):
+        self.fact_scorer_demons_path = config.fact_scorer_demons_path
         # Examples (demonstrations) that is used in prompt generation
         self.demons = self.load_demons()
         # To interact with OpenAI APIs
-        self.openai_agent = OpenAIAgent()
+        self.openai_agent = OpenAIAgent(config)
 
     def load_demons(self):
         """
@@ -20,7 +21,7 @@ class FactScorer:
         Returns:
             list: A list of examples (demonstrations).
         """
-        with open(configs.fact_scorer_demons_path, "r") as file:
+        with open(self.fact_scorer_demons_path, "r") as file:
             demons = json.load(file)
 
         return demons
@@ -48,17 +49,16 @@ class FactScorer:
 
         return instructions
 
-    def get_score(self, facts: list, knowledge_source: str) -> list:
+    def verify_facts(self, facts: list, knowledge_source: str) -> list:
         """
-        Calculates the score of each atomic fact based on the knowledge source.
-        The score is caclulated by using the OpenAI API.
+        Verify the truthfulness of a list of atomic facts based on a knowledge source.
 
         Args:
             facts (list): A list of atomic  to be scored.
             knowledge_source (str): The knowledge source to be used for scoring.
 
         Returns:
-            list: A list of dictionaries containing the atomic fact and its score.
+            list: A list of dictionaries containing the atomic fact and its verification result.
         """
 
         decisions = []

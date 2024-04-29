@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import mock_open, patch
-from FactScoreLite.fact_scorer import FactScorer
+from FactScoreLite.fact_verification import FactVerifier
 import json
 from FactScoreLite import configs
 
@@ -13,7 +13,7 @@ def mock_openai_agent():
 
 @pytest.fixture
 def fact_scorer(mock_openai_agent):
-    return FactScorer()
+    return FactVerifier()
 
 
 @pytest.mark.parametrize(
