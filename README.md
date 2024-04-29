@@ -80,9 +80,9 @@ class FactScorer:
 
 ## Usage
 
-### Extract, verify, dump
+### Extract, verify, score and dump
 
-To extract facts of a text and verify them based on the input knowledge source and dump the results:
+To extract facts of a text, verify them based on the input knowledge source, calculate the final score and dump the results:
 
 ```python
 from FactScoreLite import FactScorer
@@ -145,7 +145,7 @@ fact_scorer = FactScorer(config=config)
 # rest of your code
 ```
 
-#### Facts Extraction Prompt
+#### Fact Extraction Prompt
 <details>
 <summary>The prompt used for extracting facts from a sentence:</summary>
 
@@ -173,9 +173,9 @@ Independent Facts:
 ```
 </details>
 
-### Facts Scoring Prompt Engineering
+### Fact Verification Prompt Engineering
 
-We also use [example demonstrations](/FactScoreLite/data/fact_scorer_demons.json) for scoring instructions prompt. The file contains one positive and multiple negative examples. In each prompt, the positive example in addition to a randomly selected negative prompt is added so that GPT performs better and more accurately. The file also contains reasons for each assignment; However, they are not used in the prompt generation but is a good way of improving the accuracy of GPT on scoring in the future.
+We also use [example demonstrations](/FactScoreLite/data/fact_verification_demons.json) to instruct fact verification. The file contains one positive and multiple negative examples. In each prompt, the positive example in addition to a randomly selected negative prompt is added so that GPT performs better and more accurately. The file also contains reasons for each assignment; However, they are not used in the prompt generation but is a good way of improving the accuracy of GPT on scoring in the future.
 
 You can also set your own domain-specific examples for the run by running the following:
 
@@ -183,19 +183,19 @@ You can also set your own domain-specific examples for the run by running the fo
 from FactScoreLite import FactScoreConfig, FactScorer
 
 config = FactScoreConfig(
-    fact_scorer_demons_path="/path/to/your/json/file",
+    fact_verification_demons_path="/path/to/your/json/file",
 )
 fact_scorer = FactScorer(config=config)
 
 # rest of your code
 ```
 
-#### Fact Scoring Prompt
+#### Fact Verification Prompt
 <details>
-<summary>The following prompt template is used to instruct GPT for scoring facts:</summary>
+<summary>The following prompt template is used to instruct GPT for verification facts:</summary>
 
 ```
-# fact_scorer.py
+# fact_verification.py
 
 Instruction:
 Only consider the statement true if it can be directly verified by the information in the context. If the information in the statement cannot be found in the context or differs from it, label it as false.
